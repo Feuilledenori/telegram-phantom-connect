@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion Phantom Wallet</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #28293d);
+      color: #fff;
+      text-align: center;
+    }
+    #mainContent, #fallback {
+      width: 90%;
+      max-width: 360px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 16px;
+      font-size: 1.8rem;
+    }
+    p {
+      margin-bottom: 24px;
+      line-height: 1.5;
+      font-size: 1rem;
+      color: #e0e0e0;
+      text-align: center;
+    }
+    button, .submit {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: background-color 0.2s ease;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    button {
+      background-color: #00ffa3;
+      color: #1e1e2f;
+    }
+    button:hover {
+      background-color: #00cc82;
+    }
+    input {
+      width: calc(100% - 16px);
+      margin: auto;
+      margin-bottom: 12px;
+      padding: 8px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #1e1e2f;
+      color: #fff;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .submit {
+      background: #0055dd;
+      color: #fff;
+    }
+    .submit:hover {
+      background: #0044bb;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="mainContent">
+    <h1>👛 Connecter votre Phantom Wallet</h1>
+    <p>Pour trader en toute sécurité via smart contract, cliquez ci-dessous. Le bot ne demandera jamais votre clé privée.</p>
+    <button id="connect">Connecter via Phantom</button>
+  </div>
+
+  <div id="fallback" class="hidden">
+    <p>Phantom Wallet non détecté.</p>
+    <button id="downloadPhantom">Télécharger Phantom (Mobile)</button>
+    <button id="showInput">Je suis sur PC / Copier-coller</button>
+    <div id="inputContainer" class="hidden">
+      <p>👉 Collez ici votre clé publique Solana :</p>
+      <input type="text" id="pubkeyInput" placeholder="Votre publicKey" />
+      <button class="submit" id="sendPubkey">Envoyer au bot</button>
+    </div>
+  </div>
+
+  <script>
+    Telegram.WebApp.ready();
+
+    const connectBtn = document.getElementById('connect');
+    const mainContent = document.getElementById('mainContent');
+    const fallback  = document.getElementById('fallback');
+    const downloadBtn = document.getElementById('downloadPhantom');
+    const showInputBtn = document.getElementById('showInput');
+    const inputContainer = document.getElementById('inputContainer');
+    const sendBtn   = document.getElementById('sendPubkey');
+    const input     = document.getElementById('pubkeyInput');
+    const phantomDownloadUrl = 'https://phantom.app/download';
+
+    connectBtn.addEventListener('click', async () => {
+      if (window.solana && window.solana.isPhantom && Telegram.WebApp.initData) {
+        try {
+          const resp = await window.solana.connect();
+          return Telegram.WebApp.sendData(JSON.stringify({ pubkey: resp.publicKey.toString() }));
+        } catch (err) {
+          console.error('Erreur Phantom connect:', err);
+          alert('Connexion Phantom échouée.');
+        }
+      }
+      window.location.href = 'phantom://open';
+      setTimeout(() => {
+        mainContent.classList.add('hidden');
+        fallback.classList.remove('hidden');
+      }, 500);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      window.open(phantomDownloadUrl, '_blank');
+    });
+
+    showInputBtn.addEventListener('click', () => {
+      inputContainer.classList.remove('hidden');
+    });
+
+    sendBtn.addEventListener('click', () => {
+      const pk = input.value.trim();
+      if (pk.length > 0 && Telegram.WebApp.initData) {
+        Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
+      } else {
+        alert('Clé publique invalide ou hors Telegram WebApp.');
+      }
+    });
+  </script>
+</body>
+</html>

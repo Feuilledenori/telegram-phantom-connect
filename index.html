@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion Phantom Wallet</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #28293d);
+      color: #fff;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+    p {
+      max-width: 300px;
+      margin-bottom: 30px;
+      line-height: 1.4;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      color: #1e1e2f;
+      background-color: #00ffa3;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #00cc82;
+    }
+  </style>
+</head>
+<body>
+  <h1>👛 Connecter votre Phantom Wallet</h1>
+  <p>Pour trader en toute sécurité via smart contract, cliquez sur le bouton ci-dessous. Le bot ne demande jamais votre clé privée.</p>
+  <button id="connect">Connecter Phantom</button>
+
+  <script>
+    window.Telegram.WebApp.ready();
+    document.getElementById('connect').addEventListener('click', async () => {
+      try {
+        if (window.solana && window.solana.isPhantom) {
+          const resp = await window.solana.connect();
+          const pubkey = resp.publicKey.toString();
+          Telegram.WebApp.sendData(JSON.stringify({ pubkey }));
+        } else {
+          alert('Phantom Wallet non détecté. Installez-le pour continuer.');
+        }
+      } catch (err) {
+        console.error('Erreur de connexion Phantom:', err);
+        alert('Connexion échouée. Vérifiez Phantom Wallet.');
+      }
+    });
+  </script>
+</body>
+</html>

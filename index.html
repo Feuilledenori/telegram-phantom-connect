@@ -6,40 +6,18 @@
   <title>Connexion Phantom Wallet</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      margin: 0;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #28293d);
-      color: #fff; text-align: center;
-    }
-    #mainContent, #fallback {
-      width: 90%; max-width: 360px; margin: auto;
-    }
+    body { margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; background: linear-gradient(135deg, #1e1e2f, #28293d); color: #fff; text-align: center; }
+    #mainContent, #fallback { width: 90%; max-width: 360px; margin: auto; }
     h1 { margin-bottom: 16px; font-size: 1.8rem; }
     p { margin-bottom: 24px; line-height: 1.5; font-size: 1rem; color: #e0e0e0; }
-    button, .submit {
-      display: block; width: 100%; padding: 12px;
-      font-size: 1rem; border: none; border-radius: 8px;
-      cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: background-color 0.2s ease; margin-bottom: 12px; text-align: center;
-    }
+    button, .submit { display: block; width: 100%; padding: 12px; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: background-color 0.2s ease; margin-bottom: 12px; text-align: center; }
     button { background-color: #00ffa3; color: #1e1e2f; }
     button:hover { background-color: #00cc82; }
-    input {
-      width: calc(100% - 16px); margin: auto; margin-bottom: 12px;
-      padding: 8px; border: 1px solid #444; border-radius: 6px;
-      background: #1e1e2f; color: #fff; font-size: 1rem;
-      text-align: center;
-    }
+    input { width: calc(100% - 16px); margin: auto; margin-bottom: 12px; padding: 8px; border: 1px solid #444; border-radius: 6px; background: #1e1e2f; color: #fff; font-size: 1rem; text-align: center; }
     .submit { background: #0055dd; color: #fff; }
     .submit:hover { background: #0044bb; }
     .hidden { display: none; }
-    .instructions {
-      font-size: 0.9rem; color: #c0c0c0; margin-bottom: 16px; text-align: left;
-    }
+    .instructions { font-size: 0.9rem; color: #c0c0c0; margin-bottom: 16px; text-align: left; }
   </style>
 </head>
 <body>
@@ -52,6 +30,7 @@
   <div id="fallback" class="hidden">
     <p>Phantom Wallet non détecté. Choisissez une option :</p>
     <button id="downloadPhantom">Télécharger Phantom</button>
+    <button id="openBrowser">Ouvrir dans le navigateur</button>
     <div class="instructions">
       <p><strong>Ou copier votre clé publique Solana :</strong></p>
       <p>Dans Phantom : ouvrez votre compte, appuyez sur le crayon, puis sur <em>"Adresses du compte"</em> pour copier la clé publique.</p>
@@ -62,17 +41,17 @@
 
   <script>
     Telegram.WebApp.ready();
-
     const connectBtn = document.getElementById('connect');
     const mainContent = document.getElementById('mainContent');
-    const fallback  = document.getElementById('fallback');
+    const fallback = document.getElementById('fallback');
     const downloadBtn = document.getElementById('downloadPhantom');
-    const input     = document.getElementById('pubkeyInput');
-    const sendBtn   = document.getElementById('sendPubkey');
+    const openBrowserBtn = document.getElementById('openBrowser');
+    const input = document.getElementById('pubkeyInput');
+    const sendBtn = document.getElementById('sendPubkey');
     const downloadUrl = 'https://phantom.app/download';
+    const currentUrl = window.location.href;
 
     connectBtn.addEventListener('click', async () => {
-      // Tentative de connexion intégrée (in-app Telegram)
       if (window.solana && window.solana.isPhantom && Telegram.WebApp.initData) {
         try {
           const resp = await window.solana.connect();
@@ -85,7 +64,7 @@
       }
       // Deep-link Phantom pour ouvrir l'app
       window.location.href = 'phantom://open';
-      // fallback si non pris en charge
+      // fallback si non supporté
       setTimeout(() => {
         mainContent.classList.add('hidden');
         fallback.classList.remove('hidden');
@@ -94,6 +73,10 @@
 
     downloadBtn.addEventListener('click', () => {
       window.open(downloadUrl, '_blank');
+    });
+
+    openBrowserBtn.addEventListener('click', () => {
+      Telegram.WebApp.openLink(currentUrl);
     });
 
     sendBtn.addEventListener('click', () => {

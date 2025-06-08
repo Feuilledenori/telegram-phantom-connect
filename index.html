@@ -75,7 +75,7 @@
     const downloadUrl = 'https://phantom.app/download';
 
     connectBtn.addEventListener('click', async () => {
-      if (window.solana && window.solana.isPhantom && Telegram.WebApp.initData) {
+      if (window.solana && window.solana.isPhantom) {
         try {
           const resp = await window.solana.connect();
           Telegram.WebApp.sendData(JSON.stringify({ pubkey: resp.publicKey.toString() }));
@@ -85,18 +85,15 @@
           console.error('Erreur Phantom connect:', err);
         }
       }
-      // Sinon, afficher fallback
       mainContent.classList.add('hidden');
       fallback.classList.remove('hidden');
     });
 
-    downloadBtn.addEventListener('click', () => {
-      window.open(downloadUrl, '_blank');
-    });
+    downloadBtn.addEventListener('click', () => window.open(downloadUrl, '_blank'));
 
     sendBtn.addEventListener('click', () => {
       const pk = input.value.trim();
-      if (pk.length > 0 && Telegram.WebApp.initData) {
+      if (pk.length > 0) {
         Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
         Telegram.WebApp.close();
       } else {

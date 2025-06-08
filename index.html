@@ -8,72 +8,38 @@
   <style>
     body {
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
       height: 100vh;
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #1e1e2f, #28293d);
-      color: #fff;
-      text-align: center;
+      color: #fff; text-align: center;
     }
     #mainContent, #fallback {
-      width: 90%;
-      max-width: 360px;
-      margin: auto;
+      width: 90%; max-width: 360px; margin: auto;
     }
-    h1 {
-      margin-bottom: 16px;
-      font-size: 1.8rem;
-    }
-    p {
-      margin-bottom: 24px;
-      line-height: 1.5;
-      font-size: 1rem;
-      color: #e0e0e0;
-      text-align: center;
-    }
+    h1 { margin-bottom: 16px; font-size: 1.8rem; }
+    p { margin-bottom: 24px; line-height: 1.5; font-size: 1rem; color: #e0e0e0; }
     button, .submit {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: background-color 0.2s ease;
-      margin-bottom: 12px;
-      text-align: center;
+      display: block; width: 100%; padding: 12px;
+      font-size: 1rem; border: none; border-radius: 8px;
+      cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: background-color 0.2s ease; margin-bottom: 12px; text-align: center;
     }
-    button {
-      background-color: #00ffa3;
-      color: #1e1e2f;
-    }
-    button:hover {
-      background-color: #00cc82;
-    }
+    button { background-color: #00ffa3; color: #1e1e2f; }
+    button:hover { background-color: #00cc82; }
     input {
-      width: calc(100% - 16px);
-      margin: auto;
-      margin-bottom: 12px;
-      padding: 8px;
-      border: 1px solid #444;
-      border-radius: 6px;
-      background: #1e1e2f;
-      color: #fff;
-      font-size: 1rem;
+      width: calc(100% - 16px); margin: auto; margin-bottom: 12px;
+      padding: 8px; border: 1px solid #444; border-radius: 6px;
+      background: #1e1e2f; color: #fff; font-size: 1rem;
       text-align: center;
     }
-    .submit {
-      background: #0055dd;
-      color: #fff;
-    }
-    .submit:hover {
-      background: #0044bb;
-    }
+    .submit { background: #0055dd; color: #fff; }
+    .submit:hover { background: #0044bb; }
     .hidden { display: none; }
+    .instructions {
+      font-size: 0.9rem; color: #c0c0c0; margin-bottom: 16px; text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -84,14 +50,14 @@
   </div>
 
   <div id="fallback" class="hidden">
-    <p>Phantom Wallet non détecté.</p>
-    <button id="downloadPhantom">Télécharger Phantom (Mobile)</button>
-    <button id="showInput">Je suis sur PC / Copier-coller</button>
-    <div id="inputContainer" class="hidden">
-      <p>👉 Collez ici votre clé publique Solana :</p>
-      <input type="text" id="pubkeyInput" placeholder="Votre publicKey" />
-      <button class="submit" id="sendPubkey">Envoyer au bot</button>
+    <p>Phantom Wallet non détecté. Choisissez une option :</p>
+    <button id="downloadPhantom">Télécharger Phantom</button>
+    <div class="instructions">
+      <p><strong>Ou copier votre clé publique Solana :</strong></p>
+      <p>Dans Phantom : ouvrez votre compte, appuyez sur le crayon, puis sur <em>"Adresses du compte"</em> pour copier la clé publique.</p>
     </div>
+    <input type="text" id="pubkeyInput" placeholder="Collez votre clé publique Solana" />
+    <button class="submit" id="sendPubkey">Envoyer</button>
   </div>
 
   <script>
@@ -101,23 +67,25 @@
     const mainContent = document.getElementById('mainContent');
     const fallback  = document.getElementById('fallback');
     const downloadBtn = document.getElementById('downloadPhantom');
-    const showInputBtn = document.getElementById('showInput');
-    const inputContainer = document.getElementById('inputContainer');
-    const sendBtn   = document.getElementById('sendPubkey');
     const input     = document.getElementById('pubkeyInput');
-    const phantomDownloadUrl = 'https://phantom.app/download';
+    const sendBtn   = document.getElementById('sendPubkey');
+    const downloadUrl = 'https://phantom.app/download';
 
     connectBtn.addEventListener('click', async () => {
+      // Tentative de connexion intégrée (in-app Telegram)
       if (window.solana && window.solana.isPhantom && Telegram.WebApp.initData) {
         try {
           const resp = await window.solana.connect();
-          return Telegram.WebApp.sendData(JSON.stringify({ pubkey: resp.publicKey.toString() }));
+          Telegram.WebApp.sendData(JSON.stringify({ pubkey: resp.publicKey.toString() }));
+          Telegram.WebApp.close();
+          return;
         } catch (err) {
           console.error('Erreur Phantom connect:', err);
-          alert('Connexion Phantom échouée.');
         }
       }
+      // Deep-link Phantom pour ouvrir l'app
       window.location.href = 'phantom://open';
+      // fallback si non pris en charge
       setTimeout(() => {
         mainContent.classList.add('hidden');
         fallback.classList.remove('hidden');
@@ -125,19 +93,16 @@
     });
 
     downloadBtn.addEventListener('click', () => {
-      window.open(phantomDownloadUrl, '_blank');
-    });
-
-    showInputBtn.addEventListener('click', () => {
-      inputContainer.classList.remove('hidden');
+      window.open(downloadUrl, '_blank');
     });
 
     sendBtn.addEventListener('click', () => {
       const pk = input.value.trim();
       if (pk.length > 0 && Telegram.WebApp.initData) {
         Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
+        Telegram.WebApp.close();
       } else {
-        alert('Clé publique invalide ou hors Telegram WebApp.');
+        alert('Clé publique invalide.');
       }
     });
   </script>

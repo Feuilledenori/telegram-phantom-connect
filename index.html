@@ -5,67 +5,182 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion Phantom Wallet</title>
   <style>
-    body { background: #1e1e2f; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;}
-    h1 { margin-bottom: 18px; }
-    button { padding: 15px 32px; margin: 16px 0; font-size: 1.2em; border-radius: 8px; border: none; background: #00ffa3; color: #1e1e2f; cursor: pointer;}
-    input { margin: 12px 0; padding: 10px 15px; border-radius: 8px; border: none; width: 260px;}
-    #manual { display: block; width: 100%; max-width: 350px; }
-    .info { font-size:0.99em; color:#aaa; margin-bottom: 20px; }
-    .hide { display: none; }
-    #success { color: #00ffa3; font-size: 1.1em; margin-top: 30px; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(135deg, #1e1e2f, #28293d);
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 10px;
+    }
+    .container {
+      background: rgba(34, 34, 58, 0.9);
+      border-radius: 18px;
+      padding: 38px 20px 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      min-width: 300px;
+      max-width: 380px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      margin-bottom: 28px;
+      color: #b0ffec;
+      line-height: 1.5;
+    }
+    button, .btn {
+      display: block;
+      width: 100%;
+      padding: 14px 0;
+      margin: 10px 0;
+      font-size: 1.1rem;
+      color: #1e1e2f;
+      background-color: #00ffa3;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.20);
+      transition: background-color 0.2s;
+    }
+    button:hover, .btn:hover {
+      background-color: #00cc82;
+    }
+    .or {
+      margin: 16px 0 6px 0;
+      color: #aaa;
+      font-size: 0.97rem;
+      letter-spacing: 1px;
+    }
+    .input-clipboard {
+      background: #181825;
+      border: 1.5px solid #00ffa3;
+      border-radius: 9px;
+      color: #fff;
+      font-size: 1.07rem;
+      width: 95%;
+      margin: 0 auto 10px;
+      padding: 11px 10px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .help {
+      color: #b9e2ff;
+      font-size: 0.98rem;
+      margin-bottom: 10px;
+    }
+    .error {
+      color: #ff6b6b;
+      margin-top: 7px;
+    }
+    .success {
+      color: #3ee87a;
+      margin-top: 8px;
+      font-weight: bold;
+    }
+    .debug {
+      color: #ffee84;
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.72;
+    }
   </style>
 </head>
 <body>
-  <h1>Connecter votre Phantom Wallet</h1>
-  <button id="phantom-connect">Connecter via Phantom</button>
-  <div id="manual">
-    <div class="info">
-      <b>Pas Phantom ?</b><br>
-      <a href="https://phantom.app/download" style="color:#00ffa3;" target="_blank">Téléchargez Phantom ici</a>.<br>
-      <br>
-      <b>Ou connectez manuellement :</b>
+  <div class="container">
+    <h1>👛 Connecter votre Phantom Wallet</h1>
+    <div class="subtitle">
+      Pour trader en toute sécurité via smart contract, <b>aucune clé privée n’est demandée</b>.
     </div>
-    <input id="pubkey" placeholder="Collez votre adresse publique Solana" autocomplete="off" />
-    <button id="send-pubkey">Envoyer</button>
-    <div class="info" style="font-size:0.93em;">
-      Pour trouver votre clé publique dans Phantom :<br>
-      <b>Ouvrez l’app → compte → crayon → “adresses du compte”.</b>
+    <button id="connect-btn">Connecter via Phantom (extension)</button>
+    <div class="or">— OU —</div>
+    <div class="help">
+      Copier-coller manuellement l’adresse publique de votre wallet Phantom.<br>
+      <b>Où trouver mon adresse ?</b><br>
+      Ouvrir Phantom → Appuyer sur son compte → Crayon ✏️ → “Adresses du compte”<br>
+      Copier l’adresse commençant par <code>So</code>...<br>
     </div>
+    <input type="text" class="input-clipboard" placeholder="Collez votre adresse publique ici" id="pubkey" autocomplete="off" spellcheck="false">
+    <button class="btn" id="send-btn">Envoyer l’adresse au bot</button>
+    <div id="message"></div>
+    <div class="debug" id="debug"></div>
   </div>
-  <div id="success" class="hide">✅ Connexion envoyée au bot Telegram !</div>
+
   <script>
-    window.Telegram.WebApp.ready();
+    let phantomInstalled = window.solana && window.solana.isPhantom;
 
-    document.getElementById('phantom-connect').onclick = async () => {
-      console.log('→ Bouton CONNECT cliqué');
-      Telegram.WebApp.showAlert('DEBUG: click CONNECT');
-      if (window.solana && window.solana.isPhantom) {
-        try {
-          const resp = await window.solana.connect();
-          const pubkey = resp.publicKey.toString();
-          Telegram.WebApp.sendData(JSON.stringify({ pubkey }));
-          document.getElementById('success').classList.remove('hide');
-        } catch (e) {
-          Telegram.WebApp.showAlert("Erreur connexion Phantom : " + e);
-        }
-      } else {
-        // Proposer deux options seulement, PAS de message mobile/PC
-        document.getElementById('manual').classList.remove('hide');
-        document.getElementById('phantom-connect').innerText = "Phantom non détecté. Utilisez une option ci-dessous :";
-      }
-    };
+    function setMessage(msg, type = "") {
+      const box = document.getElementById("message");
+      box.innerHTML = "";
+      box.className = "";
+      if (!msg) return;
+      box.className = type;
+      box.innerHTML = msg;
+    }
 
-    document.getElementById('send-pubkey').onclick = () => {
-      const pk = document.getElementById('pubkey').value.trim();
-      console.log('→ Bouton ENVOYER cliqué, pk =', pk);
-      Telegram.WebApp.showAlert('DEBUG: Envoi pubkey ' + pk);
-      if (pk.length < 32) {
-        Telegram.WebApp.showAlert("Adresse publique invalide.");
+    function setDebug(msg) {
+      document.getElementById("debug").innerText = msg || "";
+    }
+
+    // PHANTOM connect
+    document.getElementById("connect-btn").onclick = async () => {
+      setMessage(""); setDebug("");
+      if (!phantomInstalled) {
+        setMessage("❌ <b>Phantom Wallet non détecté.</b> Installez-le d’abord.", "error");
+        setDebug("Extension Phantom non détectée");
         return;
       }
-      Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
-      document.getElementById('success').classList.remove('hide');
+      setDebug("→ Bouton CONNECT cliqué");
+      try {
+        const resp = await window.solana.connect();
+        if (!resp.publicKey) throw new Error("Pas de clé publique Phantom retournée");
+        let pubkey = resp.publicKey.toString();
+        setDebug("Phantom connecté: " + pubkey);
+        Telegram.WebApp.showAlert('DEBUG: Phantom connecté!');
+        setMessage('<b>✅ Wallet connecté !</b>', 'success');
+        Telegram.WebApp.sendData(JSON.stringify({ pubkey }));
+        setTimeout(() => {
+          setMessage('Redirection…', 'success');
+          Telegram.WebApp.close();
+        }, 1200);
+      } catch (err) {
+        setMessage("❌ Impossible de se connecter à Phantom.<br>" + err, "error");
+        setDebug("Erreur connexion Phantom: " + err);
+      }
     };
+
+    // COPIER/COLLER
+    document.getElementById("send-btn").onclick = () => {
+      setMessage(""); setDebug("");
+      let pk = document.getElementById("pubkey").value.trim();
+      setDebug("→ Bouton ENVOYER cliqué, pk = " + pk);
+      if (!pk || pk.length < 32) {
+        setMessage("❌ Adresse publique Solana invalide.<br>Vérifiez que vous avez bien copié votre adresse complète.", "error");
+        setDebug("Adresse trop courte ou vide");
+        return;
+      }
+      Telegram.WebApp.showAlert('DEBUG: Envoi pubkey ' + pk);
+      setMessage('<b>✅ Adresse envoyée au bot !</b>', 'success');
+      Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
+      setTimeout(() => {
+        setMessage('Redirection…', 'success');
+        Telegram.WebApp.close();
+      }, 1200);
+    };
+
+    window.Telegram.WebApp.ready && window.Telegram.WebApp.ready();
+    setDebug('WebApp initialisée');
   </script>
 </body>
 </html>

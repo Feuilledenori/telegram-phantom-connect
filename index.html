@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion Phantom Wallet</title>
+  <title>Connexion Wallet Solana</title>
   <style>
     html, body {
       height: 100%;
@@ -22,7 +22,7 @@
       padding: 0 10px;
     }
     .container {
-      background: rgba(34, 34, 58, 0.9);
+      background: rgba(34, 34, 58, 0.95);
       border-radius: 18px;
       padding: 38px 20px 32px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.25);
@@ -30,12 +30,12 @@
       max-width: 380px;
     }
     h1 {
-      font-size: 1.8rem;
-      margin-bottom: 12px;
+      font-size: 1.7rem;
+      margin-bottom: 14px;
     }
     .subtitle {
-      font-size: 1rem;
-      margin-bottom: 28px;
+      font-size: 1.08rem;
+      margin-bottom: 26px;
       color: #b0ffec;
       line-height: 1.5;
     }
@@ -44,7 +44,7 @@
       width: 100%;
       padding: 14px 0;
       margin: 10px 0;
-      font-size: 1.1rem;
+      font-size: 1.09rem;
       color: #1e1e2f;
       background-color: #00ffa3;
       border: none;
@@ -58,9 +58,9 @@
       background-color: #00cc82;
     }
     .or {
-      margin: 16px 0 6px 0;
+      margin: 14px 0 6px 0;
       color: #aaa;
-      font-size: 0.97rem;
+      font-size: 0.98rem;
       letter-spacing: 1px;
     }
     .input-clipboard {
@@ -68,7 +68,7 @@
       border: 1.5px solid #00ffa3;
       border-radius: 9px;
       color: #fff;
-      font-size: 1.07rem;
+      font-size: 1.08rem;
       width: 95%;
       margin: 0 auto 10px;
       padding: 11px 10px;
@@ -77,8 +77,8 @@
     }
     .help {
       color: #b9e2ff;
-      font-size: 0.98rem;
-      margin-bottom: 10px;
+      font-size: 0.99rem;
+      margin-bottom: 12px;
     }
     .error {
       color: #ff6b6b;
@@ -96,20 +96,22 @@
       opacity: 0.72;
     }
   </style>
+  <!-- Ajouter le provider Solana Phantom -->
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>👛 Connecter votre Phantom Wallet</h1>
+    <h1>👛 Connexion Wallet Solana</h1>
     <div class="subtitle">
-      Pour trader en toute sécurité via smart contract, <b>aucune clé privée n’est demandée</b>.
+      Connectez <b>Phantom</b>, <b>Backpack</b> ou collez votre adresse publique Solana.<br>
+      <b>Aucune clé privée n'est demandée.</b>
     </div>
-    <button id="connect-btn">Connecter via Phantom (extension)</button>
+    <button id="connect-btn">Connecter via Phantom</button>
     <div class="or">— OU —</div>
     <div class="help">
-      Copier-coller manuellement l’adresse publique de votre wallet Phantom.<br>
+      Collez manuellement l'adresse publique de votre wallet Solana.<br>
       <b>Où trouver mon adresse ?</b><br>
-      Ouvrir Phantom → Appuyer sur son compte → Crayon ✏️ → “Adresses du compte”<br>
-      Copier l’adresse publique affichée (commence généralement par <code>C</code>, <code>F</code>, <code>H</code>…)
+      Ouvrez votre wallet → Compte → Copier l’adresse publique.
     </div>
     <input type="text" class="input-clipboard" placeholder="Collez votre adresse publique ici" id="pubkey" autocomplete="off" spellcheck="false">
     <button class="btn" id="send-btn">Envoyer l’adresse au bot</button>
@@ -118,8 +120,6 @@
   </div>
 
   <script>
-    let phantomInstalled = window.solana && window.solana.isPhantom;
-
     function setMessage(msg, type = "") {
       const box = document.getElementById("message");
       box.innerHTML = "";
@@ -128,7 +128,6 @@
       box.className = type;
       box.innerHTML = msg;
     }
-
     function setDebug(msg) {
       document.getElementById("debug").innerText = msg || "";
     }
@@ -136,24 +135,29 @@
     // PHANTOM connect
     document.getElementById("connect-btn").onclick = async () => {
       setMessage(""); setDebug("");
-      if (!phantomInstalled) {
-        setMessage("❌ <b>Phantom Wallet non détecté.</b> Installez-le d’abord.", "error");
+      if (!window.solana || !window.solana.isPhantom) {
+        setMessage("❌ <b>Phantom Wallet non détecté.</b><br>Installe-le puis recharge la page.", "error");
         setDebug("Extension Phantom non détectée");
         return;
       }
       setDebug("→ Bouton CONNECT cliqué");
       try {
-        const resp = await window.solana.connect();
-        if (!resp.publicKey) throw new Error("Pas de clé publique Phantom retournée");
+        // Nouvelle API Phantom v1+
+        const resp = await window.solana.connect({ onlyIfTrusted: false });
+        if (!resp.publicKey) throw new Error("Aucune clé publique Phantom retournée");
         let pubkey = resp.publicKey.toString();
         setDebug("Phantom connecté: " + pubkey);
-        Telegram.WebApp.showAlert('DEBUG: Phantom connecté!');
-        setMessage('<b>✅ Wallet connecté !</b>', 'success');
-        Telegram.WebApp.sendData(JSON.stringify({ pubkey }));
-        setTimeout(() => {
-          setMessage('Redirection…', 'success');
-          Telegram.WebApp.close();
-        }, 1200);
+        if (window.Telegram && window.Telegram.WebApp) {
+          Telegram.WebApp.showAlert('Phantom connecté !');
+          Telegram.WebApp.sendData(JSON.stringify({ pubkey }));
+          setMessage('<b>✅ Wallet connecté !</b>', 'success');
+          setTimeout(() => {
+            setMessage('Redirection…', 'success');
+            Telegram.WebApp.close();
+          }, 1200);
+        } else {
+          setMessage('<b>✅ Wallet connecté !</b><br><code>' + pubkey + '</code>', 'success');
+        }
       } catch (err) {
         setMessage("❌ Impossible de se connecter à Phantom.<br>" + err, "error");
         setDebug("Erreur connexion Phantom: " + err);
@@ -166,21 +170,28 @@
       let pk = document.getElementById("pubkey").value.trim();
       setDebug("→ Bouton ENVOYER cliqué, pk = " + pk);
       if (!pk || pk.length < 32) {
-        setMessage("❌ Adresse publique Solana invalide.<br>Vérifiez que vous avez bien copié votre adresse complète.", "error");
+        setMessage("❌ Adresse publique Solana invalide.<br>Vérifie que tu as bien copié ton adresse complète.", "error");
         setDebug("Adresse trop courte ou vide");
         return;
       }
-      Telegram.WebApp.showAlert('DEBUG: Envoi pubkey ' + pk);
-      setMessage('<b>✅ Adresse envoyée au bot !</b>', 'success');
-      Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
-      setTimeout(() => {
-        setMessage('Redirection…', 'success');
-        Telegram.WebApp.close();
-      }, 1200);
+      if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.showAlert('Envoi pubkey ' + pk);
+        Telegram.WebApp.sendData(JSON.stringify({ pubkey: pk }));
+        setMessage('<b>✅ Adresse envoyée au bot !</b>', 'success');
+        setTimeout(() => {
+          setMessage('Redirection…', 'success');
+          Telegram.WebApp.close();
+        }, 1200);
+      } else {
+        setMessage('<b>✅ Adresse prise en compte !</b><br><code>' + pk + '</code>', 'success');
+      }
     };
 
-    window.Telegram.WebApp.ready && window.Telegram.WebApp.ready();
-    setDebug('WebApp initialisée');
+    // Prêt pour Telegram WebApp (important)
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.ready) {
+      window.Telegram.WebApp.ready();
+      setDebug('WebApp Telegram initialisée');
+    }
   </script>
 </body>
 </html>

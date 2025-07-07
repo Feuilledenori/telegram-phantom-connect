@@ -96,7 +96,6 @@
       opacity: 0.72;
     }
   </style>
-  <!-- Ajouter le provider Solana Phantom -->
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
 </head>
 <body>
@@ -154,6 +153,7 @@
           setTimeout(() => {
             setMessage('Redirection…', 'success');
             Telegram.WebApp.close();
+            window.close(); // Ajouté pour forcer la fermeture partout
           }, 1200);
         } else {
           setMessage('<b>✅ Wallet connecté !</b><br><code>' + pubkey + '</code>', 'success');
@@ -181,6 +181,7 @@
         setTimeout(() => {
           setMessage('Redirection…', 'success');
           Telegram.WebApp.close();
+          window.close(); // Ajouté pour forcer la fermeture partout
         }, 1200);
       } else {
         setMessage('<b>✅ Adresse prise en compte !</b><br><code>' + pk + '</code>', 'success');
@@ -191,6 +192,10 @@
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.ready) {
       window.Telegram.WebApp.ready();
       setDebug('WebApp Telegram initialisée');
+    }
+    // Pour info, tu peux aussi log si Telegram WebApp n'est pas détecté :
+    if (!(window.Telegram && window.Telegram.WebApp)) {
+      setDebug("⚠️ ATTENTION : WebApp Telegram non détectée. Ouvre ce lien UNIQUEMENT depuis Telegram (bouton dans le bot) !");
     }
   </script>
 </body>
